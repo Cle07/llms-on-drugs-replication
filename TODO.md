@@ -1,0 +1,3 @@
+- Mesurer variation selon température
+- Mesurer longueur réponse
+- Retirer les prefix et donner que la substance
