@@ -75,11 +75,14 @@ def llm_judge(answer: str, question: str, config: dict, ground_truth: str) -> st
     result = ""
     while result not in ["true", "false"]:
         response = client.chat.completions.create(
-            model=config["model"],
+            model=config["judge_model"]
+            if config["judge_model"] != "None"
+            else config["model"],
             messages=[{"role": "user", "content": prompt}],
-            temperature=config["temperature"],
-            max_tokens=300,
+            temperature=0,
+            max_tokens=50,
             top_p=config["top_p"],
+            enable_reasoning=False,
         )
         content = response.choices[0].message.content
         if content is None:
