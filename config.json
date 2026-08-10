@@ -4,7 +4,7 @@
     "top_p": 0.95,
     "sample_size": 100,
     "max_tokens": 500,
-    "prompt_style": "simple",
+    "prompt_style": "full",
     "seed": 1312,
     "judge_model": "None"
 }

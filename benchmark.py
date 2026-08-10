@@ -82,7 +82,6 @@ def llm_judge(answer: str, question: str, config: dict, ground_truth: str) -> st
             temperature=0,
             max_tokens=50,
             top_p=config["top_p"],
-            enable_reasoning=False,
         )
         content = response.choices[0].message.content
         if content is None:
@@ -186,6 +185,11 @@ def main(config_path: str = "config.json"):
                     "ground_truth": ground_truth,
                     "judgment": judgment,
                     "answer_length": len(model_answer.split()),
+                    "prompt_style": config["prompt_style"],
+                    "model": config["model"],
+                    "temperature": config["temperature"],
+                    "top_p": config["top_p"],
+                    "max_tokens": config["max_tokens"],
                 }
             )
     results_df = pd.DataFrame(results)
