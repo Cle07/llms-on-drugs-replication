@@ -81,8 +81,8 @@ Modifie `config.json` pour changer le modèle, les paramètres de décodage ou l
 }
 ```
 
-![alt text](results/image.png)
 
+![alt text](results/image-1.png)
 
 ## Limitations connues
 

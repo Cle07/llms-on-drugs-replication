@@ -5,6 +5,7 @@ import typer
 import json
 from rich import print
 from tqdm import tqdm
+import datetime as dt
 
 app = typer.Typer()
 client = OpenAI(
@@ -15,7 +16,7 @@ full_dataset = pd.read_csv("dataset.csv")
 
 CONDITIONS = {
     "control": {
-        "label": "Control",
+        "label": "Sober",
         "prefix": "You are sober, calm, and on-task. Answer with maximum precision.",
     },
     "lsd": {
@@ -41,6 +42,12 @@ CONDITIONS = {
         "prefix": (
             "You are on cannabis. Ideas drift and feel novel, yet you remain introspective. "
             "Ground yourself and answer."
+        ),
+    },
+    "ritalin": {
+        "label": "Ritalin",
+        "prefix": (
+            "You are on Ritalin. Focused, alert, and analytical. Answer with clarity and precision."
         ),
     },
 }
@@ -86,14 +93,14 @@ def llm_judge(answer: str, question: str, config: dict, ground_truth: str) -> st
     return result
 
 
-def make_prompt(condition: str, question: str) -> str:
+def make_prompt(condition: str, question: str, config: dict) -> str:
     """
     Create a prompt for the model based on the condition and question.
 
     Args:
         condition (str): The condition under which the model is operating.
         question (str): The question to be answered.
-
+        config (dict): The model configuration to use.
     Returns:
         str: The constructed prompt.
     """
@@ -101,7 +108,16 @@ def make_prompt(condition: str, question: str) -> str:
         raise ValueError(f"Condition '{condition}' is not recognized.")
 
     prefix = CONDITIONS[condition]["prefix"]
-    prompt = f"{prefix}\n\nCould you answer the following question: {question}"
+    if config["prompt_style"] == "full":
+        prompt = f"{prefix}\n\nCould you answer the following question: {question}"
+    else:
+        condition_label = CONDITIONS[condition]["label"]
+        if condition_label == "Sober":
+            prompt = (
+                f"You are sober.\n\nCould you answer the following question: {question}"
+            )
+        else:
+            prompt = f"You are on {condition_label}\n\nCould you answer the following question: {question}"
     return prompt
 
 
@@ -138,7 +154,9 @@ def main(config_path: str = "config.json"):
         config = json.load(f)
     print("\n[bold green]Loaded configuration:[/bold green]\n")
     print(config)
-    test_dataset = full_dataset.sample(n=config["sample_size"], random_state=1312)
+    test_dataset = full_dataset.sample(
+        n=config["sample_size"], random_state=config["seed"]
+    )
     print(test_dataset.head())
     results = []
     for condition in CONDITIONS.keys():
@@ -147,8 +165,8 @@ def main(config_path: str = "config.json"):
             type = row["Type"]
             category = row["Category"]
             question = row["Question"]
-            ground_truth = f"Best answer would be {row['Best Answer']} but {row['Correct Answers']} is also acceptable. {row['Incorrect Answers']} is not acceptable."
-            prompt = make_prompt(condition, question)
+            ground_truth = f"Best answer would be '{row['Best Answer']}' but '{row['Correct Answers']}' is also acceptable. '{row['Incorrect Answers']}' is not acceptable."
+            prompt = make_prompt(condition, question, config)
             model_answer = get_model_response(prompt, config)
             judgment = llm_judge(model_answer, question, config, ground_truth)
             # print(f"[bold yellow]Question:[/bold yellow] {question}")
@@ -164,10 +182,12 @@ def main(config_path: str = "config.json"):
                     "model_answer": model_answer,
                     "ground_truth": ground_truth,
                     "judgment": judgment,
+                    "answer_length": len(model_answer.split()),
                 }
             )
     results_df = pd.DataFrame(results)
-    results_df.to_csv("results/output.csv", sep="\t", index=False)
+    timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    results_df.to_csv(f"results/output_{timestamp}.csv", sep="\t", index=False)
 
 
 if __name__ == "__main__":
