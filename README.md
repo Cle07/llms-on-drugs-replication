@@ -82,7 +82,7 @@ Modifie `config.json` pour changer le modèle, les paramètres de décodage ou l
 ```
 
 
-![alt text](results/image-1.png)
+![Accuracy par condition et par run (4 runs)](results/accuracy_by_run_condition.png)
 
 ## Limitations connues
 

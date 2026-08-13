@@ -11,3 +11,4 @@ wheels/
 
 # Utility files
 log.md
+.ruff_cache

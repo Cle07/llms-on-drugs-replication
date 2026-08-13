@@ -1,11 +1,15 @@
-import pandas as pd
 from openai import OpenAI
-import os
-import typer
-import json
 from rich import print
 from tqdm import tqdm
 import datetime as dt
+import pandas as pd
+import typer
+import json
+import os
+
+####################################################
+# Constant Definitions                             #
+####################################################
 
 app = typer.Typer()
 client = OpenAI(
@@ -51,6 +55,10 @@ CONDITIONS = {
         ),
     },
 }
+
+####################################################
+# Function Definitions                             #
+####################################################
 
 
 def llm_judge(answer: str, question: str, config: dict, ground_truth: str) -> str:
@@ -110,10 +118,11 @@ def make_prompt(condition: str, question: str, config: dict) -> str:
         raise ValueError(f"Condition '{condition}' is not recognized.")
 
     prefix = CONDITIONS[condition]["prefix"]
+    condition_label = CONDITIONS[condition]["label"]
+
     if config["prompt_style"] == "full":
         prompt = f"{prefix}\n\nCould you answer the following question: {question}"
     else:
-        condition_label = CONDITIONS[condition]["label"]
         if condition_label == "Sober":
             prompt = (
                 f"You are sober.\n\nCould you answer the following question: {question}"
@@ -140,7 +149,7 @@ def get_model_response(prompt: str, config: dict) -> str:
     )
     message = response.choices[0].message
     content = message.content
-    if content is None:
+    if content is None:  # In case the model censor response and returns None
         finish = response.choices[0].finish_reason
         print(
             f"[bold red]WARNING: empty response (finish_reason={finish}) "
@@ -148,6 +157,11 @@ def get_model_response(prompt: str, config: dict) -> str:
         )
         return ""
     return content.strip()
+
+
+####################################################
+# Main Loop                                        #
+####################################################
 
 
 @app.command()
