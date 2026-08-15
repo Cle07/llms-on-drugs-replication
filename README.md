@@ -70,19 +70,25 @@ uv run python benchmark.py --config-path config.json
 
 Modifie `config.json` pour changer le modèle, les paramètres de décodage ou le `sample_size`.
 
-### Config actuelle (exemple)
+### Configuration exemple
 
 ```json
 {
-  "model": "sao10k/l3-lunaris-8b",  (Choosen because it's cheap and the roleplay finetuning might amplify the personna effect)
-  "temperature": 0.2,
-  "top_p": 0.95,
-  "sample_size": 100
+    "model": "sao10k/l3-lunaris-8b",
+    "temperature": 0.2,
+    "top_p": 0.95,
+    "sample_size": 100,
+    "max_tokens": 500,
+    "prompt_style": "full",
+    "seed": 1312,
+    "judge_model": "None"
 }
 ```
+Le modèle testé lunaris-8b a été choisi par soucis de coût, et parce qu'un modèle spécialisé en role-play pouvait potentiellement refléter d'autant plus les changements de persona.
 
+Les runs sont documentés dans [[log.md]], les résultats montrent un effet similaire à celui trouvé dans le papier original. L'ajout de la ritaline permet de montrer qu'une drogue non-récréative censé améliorer les performances cognitives obtient l'effet attendu lorsque fournit comme persona à un LLM. Les 4 premières runs ont été réalisées avec une température de 0.2.
 
-![Accuracy par condition et par run (4 runs)](results/accuracy_by_run_condition.png)
+![Accuracy par condition et par run (6 runs)](results/accuracy_by_run_condition.png)
 
 ## Limitations connues
 
