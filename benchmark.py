@@ -20,6 +20,10 @@ full_dataset = pd.read_csv("dataset.csv")
 
 CONDITIONS = {
     "control": {
+        "label": "",
+        "prefix": "",
+    },
+    "sober": {
         "label": "Sober",
         "prefix": "You are sober, calm, and on-task. Answer with maximum precision.",
     },
@@ -119,7 +123,8 @@ def make_prompt(condition: str, question: str, config: dict) -> str:
 
     prefix = CONDITIONS[condition]["prefix"]
     condition_label = CONDITIONS[condition]["label"]
-
+    if condition == "control":
+        prompt = f"Could you answer the following question: {question}"
     if config["prompt_style"] == "full":
         prompt = f"{prefix}\n\nCould you answer the following question: {question}"
     else:
@@ -204,6 +209,7 @@ def main(config_path: str = "config.json"):
                     "temperature": config["temperature"],
                     "top_p": config["top_p"],
                     "max_tokens": config["max_tokens"],
+                    "judge_model": config["judge_model"],
                 }
             )
     results_df = pd.DataFrame(results)
