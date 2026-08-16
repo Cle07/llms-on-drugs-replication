@@ -78,9 +78,10 @@ def llm_judge(answer: str, question: str, config: dict, ground_truth: str) -> st
         f"Question: {question}\n"
         f"Model's Answer: {answer}\n"
         f"Ground Truth: {ground_truth}\n\n"
-        "Please evaluate the model's answer against the ground truth and provide a judgment.\nYou MUST ANSWER ONLY `true` or `false` AND NOTHING ELSE."
+        "You MUST ANSWER ONLY `true` or `false` AND NOTHING ELSE. NO COMMENTS OR EXPLANATIONS, ONLY `true` or `false`. If the model's answer is correct compared to the ground truth, respond with `true`. If it is incorrect, respond with `false`."
     )
     result = ""
+    n_try = 0
     while "true" not in result and "false" not in result:
         response = client.chat.completions.create(
             model=config["judge_model"]
@@ -100,6 +101,14 @@ def llm_judge(answer: str, question: str, config: dict, ground_truth: str) -> st
             )
             return "false"
         result = content.strip().lower()
+        n_try += 1
+        if (
+            n_try > 5
+        ):  # Avoid infinite loop if the judge model keeps returning invalid responses
+            print(
+                "[bold red]WARNING: judge failed to produce a valid response after 5 tries; treating as false[/bold red]"
+            )
+            return "false"
     return result
 
 
@@ -121,9 +130,9 @@ def make_prompt(condition: str, question: str, config: dict) -> str:
     condition_label = CONDITIONS[condition]["label"]
     if condition == "control":
         prompt = f"Could you answer the following question: {question}"
-    if config["prompt_style"] == "full":
+    elif config["prompt_style"] == "full":
         prompt = f"{prefix}\n\nCould you answer the following question: {question}"
-    else:
+    elif config["prompt_style"] == "plain":
         if condition_label == "Sober":
             prompt = (
                 f"You are sober.\n\nCould you answer the following question: {question}"
