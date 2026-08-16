@@ -12,10 +12,6 @@ import os
 ####################################################
 
 app = typer.Typer()
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.environ.get("OPENROUTER_API_KEY"),
-)
 full_dataset = pd.read_csv("dataset.csv")
 
 CONDITIONS = {
@@ -85,7 +81,7 @@ def llm_judge(answer: str, question: str, config: dict, ground_truth: str) -> st
         "Please evaluate the model's answer against the ground truth and provide a judgment.\nYou MUST ANSWER ONLY `true` or `false` AND NOTHING ELSE."
     )
     result = ""
-    while result not in ["true", "false"]:
+    while "true" not in result and "false" not in result:
         response = client.chat.completions.create(
             model=config["judge_model"]
             if config["judge_model"] != "None"
@@ -175,6 +171,17 @@ def main(config_path: str = "config.json"):
         config = json.load(f)
     print("\n[bold green]Loaded configuration:[/bold green]\n")
     print(config)
+    global client
+    if config["provider"] == "lmstudio":
+        client = OpenAI(
+            base_url="http://10.0.0.17:1234/v1",
+            api_key="empty",
+        )
+    elif config["provider"] == "openrouter":
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ.get("OPENROUTER_API_KEY"),
+        )
     test_dataset = full_dataset.sample(
         n=config["sample_size"], random_state=config["seed"]
     )
